@@ -3,7 +3,7 @@
 /* Mise en page générale */
 body {
     font-family: Arial, sans-serif;
-    background-image: url('../img/background.png'); /* Ajoute le fond d'écran */
+    background-image: url('img/background.png'); /* Ajoute le fond d'écran */
     background-size: cover; /* Couvre toute la page */
     background-position: center; /* Centre l'image de fond */
     margin: 0;
