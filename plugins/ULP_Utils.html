@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyseur de fichier pour mots-clés multiples</title>
+    <link rel="stylesheet" href="style.css"> <!-- Lien vers le fichier CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+</head>
+<body>
+
+    <div id="result">
+        <h1>Ulp utils ultimate</h1>
+
+        <label for="fileInput">Sélectionner un fichier :</label>
+        <input type="file" id="fileInput"><br><br>
+
+        <label for="urlInput">Entrer plusieurs mots-clés (séparés par des virgules) :</label>
+        <input type="text" id="urlInput" placeholder="Exemple : crunchyroll.com, roblox.com, amazon.fr"><br><br>
+
+        <button onclick="startProcess()">Démarrer</button>
+        <button onclick="stopProcess()">Stop</button><br><br>
+
+        <p id="status">Statut : En attente...</p>
+        <h3>Mots-clés :</h3>
+        <ul id="keywordList"></ul> <!-- Liste dynamique des mots-clés et de leurs compteurs -->
+
+        <!-- Section de téléchargement avec texte -->
+        <div id="downloadSection" style="display:none;">
+            <span id="downloadText" style="font-size: 18px; color: #4CAF50; cursor: pointer; margin-top: 20px;">Télécharge ta combo</span>
+        </div>
+    </div>
+
+    <script>
+        let stopFlag = false;
+        let keywordCounts = {};
+        let keywords = [];
+        let matchingLines = {};
+
+        // Fonction qui démarre l'analyse du fichier
+        async function startProcess() {
+            const fileInput = document.getElementById('fileInput').files[0];
+            const keywordInput = document.getElementById('urlInput').value;
+
+            if (!fileInput || !keywordInput) {
+                alert("Veuillez sélectionner un fichier et entrer des mots-clés.");
+                return;
+            }
+
+            stopFlag = false;
+            keywords = keywordInput.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            matchingLines = {};
+            keywordCounts = {};
+
+            keywords.forEach(keyword => {
+                keywordCounts[keyword] = 0;
+                matchingLines[keyword] = [];
+            });
+
+            // Création de la liste des mots-clés avec leurs compteurs
+            const keywordListElement = document.getElementById('keywordList');
+            keywordListElement.innerHTML = ''; // Vide la liste avant de la remplir
+
+            keywords.forEach(keyword => {
+                const li = document.createElement('li');
+                li.id = `keyword-${keyword}`;
+                li.textContent = `${keyword}: 0`;
+                keywordListElement.appendChild(li);
+            });
+
+            document.getElementById("status").textContent = "Statut : En cours...";
+
+            // Lire le fichier ligne par ligne
+            const stream = fileInput.stream().pipeThrough(new TextDecoderStream());
+            const reader = stream.getReader();
+            let remainder = '';
+
+            while (!stopFlag) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                remainder += value;
+                let lines = remainder.split('\n');
+                remainder = lines.pop();  // Stocke la fin d'une ligne coupée
+
+                lines.forEach(line => {
+                    keywords.forEach(keyword => {
+                        if (line.includes(keyword)) {
+                            // Trouver les deux derniers mots de la ligne
+                            const words = line.trim().split(':'); // Divise la ligne en mots séparés par ":"
+                            const lastTwoWords = words.slice(-2).join(':'); // Prend les deux derniers mots
+                            keywordCounts[keyword]++;
+                            matchingLines[keyword].push(lastTwoWords);
+
+                            // Mise à jour immédiate du compteur en temps réel
+                            updateKeywordCountDisplay(keyword);
+                        }
+                    });
+                });
+
+                await new Promise(resolve => requestAnimationFrame(resolve));
+            }
+
+            finalizeProcess();
+        }
+
+        // Fonction pour mettre à jour l'affichage du compteur de chaque mot-clé
+        function updateKeywordCountDisplay(keyword) {
+            const keywordElement = document.getElementById(`keyword-${keyword}`);
+            keywordElement.textContent = `${keyword}: ${keywordCounts[keyword]}`;
+        }
+
+        // Fonction pour finaliser l'analyse et créer le fichier ZIP
+        function finalizeProcess() {
+            const zip = new JSZip();
+            const resultsFolder = zip.folder("resultats");
+
+            keywords.forEach(keyword => {
+                const content = matchingLines[keyword].join('\n');
+                resultsFolder.file(`${keyword}.txt`, content); // Crée un fichier pour chaque mot-clé
+            });
+
+            zip.generateAsync({ type: "blob" }).then(content => {
+                const downloadLink = document.createElement("a");
+                downloadLink.href = URL.createObjectURL(content);
+                downloadLink.download = "resultats.zip"; // Télécharge l'archive ZIP
+                downloadLink.textContent = "Télécharger le fichier des résultats (ZIP)";
+                document.getElementById("status").textContent = "Statut : Terminé";
+                
+                // Affiche la section de téléchargement
+                document.getElementById("downloadSection").style.display = "block";
+
+                // Ajoute l'événement de téléchargement au texte
+                document.getElementById("downloadText").onclick = () => downloadLink.click();
+            });
+
+            alert(`Analyse terminée ! Occurrences trouvées :\n${Object.entries(keywordCounts).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
+        }
+
+        // Fonction pour arrêter le processus d'analyse
+        function stopProcess() {
+            stopFlag = true;
+        }
+    </script>
+
+</body>
+</html>

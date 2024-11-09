@@ -1,0 +1,99 @@
+/* style.css */
+
+/* Mise en page générale */
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('../img/background.png'); /* Ajoute le fond d'écran */
+    background-size: cover; /* Couvre toute la page */
+    background-position: center; /* Centre l'image de fond */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #444;
+}
+
+/* Conteneur principal */
+#result {
+    background-color: rgba(255, 255, 255, 0.8); /* Fond semi-transparent pour améliorer la lisibilité */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 500px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Champs de saisie */
+input[type="file"],
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+/* Boutons */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Liste des mots-clés */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background-color: #f8f8f8;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Statut du processus */
+#status {
+    font-weight: bold;
+    margin-top: 15px;
+    color: #4CAF50;
+}
+
+/* Section de téléchargement */
+#downloadSection {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#downloadText {
+    font-size: 18px;
+    color: #4CAF50;
+    cursor: pointer;
+}
