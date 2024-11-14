@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klesix</title></title>
+    <title>Analyseur de fichier pour mots-clés multiples</title>
     <link rel="stylesheet" href="style.css"> <!-- Lien vers le fichier CSS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
 </head>
 <body>
 
     <div id="result">
-        <h1>Ulp utils ultimate</h1>
+        <h1>Analyseur de fichier pour mots-clés multiples</h1>
 
         <label for="fileInput">Sélectionner un fichier :</label>
         <input type="file" id="fileInput"><br><br>
 
         <label for="urlInput">Entrer plusieurs mots-clés (séparés par des virgules) :</label>
-        <input type="text" id="urlInput" placeholder="Exemple : crunchyroll.com, roblox.com, amazon.fr"><br><br>
+        <input type="text" id="urlInput" placeholder="Exemple : crunchyroll.com, anime, streaming"><br><br>
+
+        <!-- Case à cocher pour suppression des doublons -->
+        <label for="removeDuplicates">Supprimer les doublons :</label>
+        <input type="checkbox" id="removeDuplicates"><br><br>
 
         <button onclick="startProcess()">Démarrer</button>
         <button onclick="stopProcess()">Stop</button><br><br>
 
         <p id="status">Statut : En attente...</p>
-        <h3>Mots-clés :</h3>
+        <h3>Mots-clés et occurrences :</h3>
         <ul id="keywordList"></ul> <!-- Liste dynamique des mots-clés et de leurs compteurs -->
 
         <!-- Section de téléchargement avec texte -->
@@ -57,9 +61,8 @@
                 matchingLines[keyword] = [];
             });
 
-            // Création de la liste des mots-clés avec leurs compteurs
             const keywordListElement = document.getElementById('keywordList');
-            keywordListElement.innerHTML = ''; // Vide la liste avant de la remplir
+            keywordListElement.innerHTML = '';
 
             keywords.forEach(keyword => {
                 const li = document.createElement('li');
@@ -81,18 +84,16 @@
 
                 remainder += value;
                 let lines = remainder.split('\n');
-                remainder = lines.pop();  // Stocke la fin d'une ligne coupée
+                remainder = lines.pop();
 
                 lines.forEach(line => {
                     keywords.forEach(keyword => {
                         if (line.includes(keyword)) {
-                            // Trouver les deux derniers mots de la ligne
-                            const words = line.trim().split(':'); // Divise la ligne en mots séparés par ":"
-                            const lastTwoWords = words.slice(-2).join(':'); // Prend les deux derniers mots
+                            const words = line.trim().split(':');
+                            const lastTwoWords = words.slice(-2).join(':');
                             keywordCounts[keyword]++;
                             matchingLines[keyword].push(lastTwoWords);
 
-                            // Mise à jour immédiate du compteur en temps réel
                             updateKeywordCountDisplay(keyword);
                         }
                     });
@@ -104,7 +105,6 @@
             finalizeProcess();
         }
 
-        // Fonction pour mettre à jour l'affichage du compteur de chaque mot-clé
         function updateKeywordCountDisplay(keyword) {
             const keywordElement = document.getElementById(`keyword-${keyword}`);
             keywordElement.textContent = `${keyword}: ${keywordCounts[keyword]}`;
@@ -115,29 +115,34 @@
             const zip = new JSZip();
             const resultsFolder = zip.folder("resultats");
 
+            const removeDuplicates = document.getElementById('removeDuplicates').checked;
+
             keywords.forEach(keyword => {
-                const content = matchingLines[keyword].join('\n');
-                resultsFolder.file(`${keyword}.txt`, content); // Crée un fichier pour chaque mot-clé
+                let lines = matchingLines[keyword];
+                
+                // Suppression des doublons si la case est cochée
+                if (removeDuplicates) {
+                    lines = Array.from(new Set(lines));
+                }
+
+                const content = lines.join('\n');
+                resultsFolder.file(`${keyword}.txt`, content);
             });
 
             zip.generateAsync({ type: "blob" }).then(content => {
                 const downloadLink = document.createElement("a");
                 downloadLink.href = URL.createObjectURL(content);
-                downloadLink.download = "resultats.zip"; // Télécharge l'archive ZIP
+                downloadLink.download = "resultats.zip";
                 downloadLink.textContent = "Télécharger le fichier des résultats (ZIP)";
                 document.getElementById("status").textContent = "Statut : Terminé";
-                
-                // Affiche la section de téléchargement
-                document.getElementById("downloadSection").style.display = "block";
 
-                // Ajoute l'événement de téléchargement au texte
+                document.getElementById("downloadSection").style.display = "block";
                 document.getElementById("downloadText").onclick = () => downloadLink.click();
             });
 
             alert(`Analyse terminée ! Occurrences trouvées :\n${Object.entries(keywordCounts).map(([k, v]) => `${k}: ${v}`).join('\n')}`);
         }
 
-        // Fonction pour arrêter le processus d'analyse
         function stopProcess() {
             stopFlag = true;
         }
