@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyseur de fichier</title>
+    <link rel="stylesheet" href="../style/Allinone.css"> <!-- Lien vers le fichier CSS -->
+    <style>
+        /* Style pour le bouton retour en haut à gauche */
+        #homeButton {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #homeButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Bouton retour à l'accueil en haut à gauche -->
+    <a href="../index.html">
+        <button id="homeButton">Retour à l'accueil</button>
+    </a>
+
+    <div id="result">
+        <h1>Analyseur de fichier</h1>
+
+        <!-- Sélectionner un dossier -->
+        <label for="folderInput">Sélectionner un dossier :</label>
+        <input type="file" id="folderInput" webkitdirectory mozdirectory /><br><br>
+
+        <!-- Nom du fichier de résultat -->
+        <label for="resultFileName">Nom du fichier résultat :</label>
+        <input type="text" id="resultFileName" placeholder="Nom du fichier résultat"><br><br>
+
+        <!-- Options pour supprimer les doublons et les captures -->
+        <label for="removeDuplicates">Supprimer les doublons :</label>
+        <input type="checkbox" id="removeDuplicates"><br><br>
+
+        <label for="removeCaptures">Supprimer les captures :</label>
+        <input type="checkbox" id="removeCaptures"><br><br>
+
+        <button onclick="startProcess()">Démarrer</button>
+        <button onclick="stopProcess()">Stop</button><br><br>
+
+        <p id="status">Statut : En attente...</p>
+        <p id="lineCount">Lignes ajoutées : 0</p>
+
+        <div id="downloadSection" style="display:none;">
+            <span id="downloadText" style="font-size: 18px; color: #4CAF50; cursor: pointer; margin-top: 20px;">Télécharger le fichier résultat</span>
+        </div>
+    </div>
+
+    <script>
+        let stopFlag = false;
+        let allLines = [];
+        let fileCount = 0;
+
+        // Fonction qui démarre le traitement des fichiers
+        async function startProcess() {
+            const folderInput = document.getElementById('folderInput').files;
+            const resultFileName = document.getElementById('resultFileName').value;
+
+            // Vérification des champs
+            if (!folderInput.length || !resultFileName) {
+                alert("Veuillez sélectionner un dossier et entrer un nom pour le fichier résultat.");
+                return;
+            }
+
+            stopFlag = false;
+            allLines = []; // Réinitialisation des lignes
+
+            document.getElementById("status").textContent = "Statut : En cours...";
+            document.getElementById("lineCount").textContent = "Lignes ajoutées : 0";
+
+            // Traitement de chaque fichier dans le dossier
+            for (let file of folderInput) {
+                if (stopFlag) break;
+
+                const fileReader = new FileReader();
+
+                fileReader.onload = function(event) {
+                    const fileContent = event.target.result.split('\n');
+
+                    // Ajout des lignes au tableau allLines
+                    allLines = allLines.concat(fileContent);
+
+                    // Mise à jour du compteur
+                    document.getElementById("lineCount").textContent = "Lignes ajoutées : " + allLines.length;
+
+                    // Option de suppression des doublons
+                    if (document.getElementById('removeDuplicates').checked) {
+                        allLines = Array.from(new Set(allLines));
+                    }
+
+                    // Option de suppression des captures
+                    if (document.getElementById('removeCaptures').checked) {
+                        allLines = allLines.filter(line => /[0-9a-zA-Z_.]+@[0-9a-zA-Z_.]+:[\S]+/.test(line));
+                    }
+
+                    // Si on a fini de traiter tous les fichiers
+                    if (file === folderInput[folderInput.length - 1]) {
+                        finalizeProcess(resultFileName);
+                    }
+                };
+
+                // Lecture du fichier
+                fileReader.readAsText(file);
+            }
+        }
+
+        // Fonction pour arrêter le traitement
+        function stopProcess() {
+            stopFlag = true;
+            document.getElementById("status").textContent = "Statut : Arrêté";
+        }
+
+        // Fonction pour finaliser le traitement et créer le fichier
+        function finalizeProcess(resultFileName) {
+            // Vérification de la taille du tableau allLines avant d'écrire le fichier
+            console.log('Lignes collectées avant génération du fichier :', allLines.length);
+
+            // Création du fichier résultat
+            const resultContent = allLines.join('\n');
+            const blob = new Blob([resultContent], { type: 'text/plain' });
+
+            // Création du lien de téléchargement
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(blob);
+            downloadLink.download = resultFileName + '.txt';
+            downloadLink.textContent = "Télécharger le fichier résultat";
+
+            // Affichage du lien de téléchargement
+            document.getElementById("downloadSection").style.display = "block";
+            document.getElementById("downloadText").onclick = () => downloadLink.click();
+
+            // Mise à jour de l'état
+            document.getElementById("status").textContent = "Statut : Terminé";
+        }
+    </script>
+
+</body>
+</html>

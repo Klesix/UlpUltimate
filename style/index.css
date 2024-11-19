@@ -1,0 +1,82 @@
+/* Mise en page générale */
+body {
+    font-family: 'Arial', sans-serif;
+    background-image: url('../img/background.png'); /* Ajoute un fond d'écran attrayant */
+    background-size: cover; /* Couvre toute la page */
+    background-position: center; /* Centre l'image de fond */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+/* Conteneur principal */
+#container {
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7); /* Fond sombre et transparent pour améliorer la lisibilité */
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Titre principal */
+h1 {
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 30px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5); /* Ombre douce sur le titre */
+}
+
+/* Liste des plugins */
+#plugin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Liens des plugins */
+.plugin-link {
+    display: block;
+    background-color: #4CAF50; /* Couleur verte */
+    color: white;
+    text-decoration: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    transition: background-color 0.3s, transform 0.3s;
+    width: 200px;
+    margin: 0 auto;
+}
+
+.plugin-link:hover {
+    background-color: #45a049;
+    transform: scale(1.05); /* Effet de zoom sur le lien */
+}
+
+.plugin-link:focus {
+    outline: none;
+}
+
+/* Responsive pour les petits écrans */
+@media screen and (max-width: 768px) {
+    #container {
+        width: 80%;
+        padding: 30px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .plugin-link {
+        font-size: 1.3rem;
+        padding: 12px 25px;
+    }
+}
